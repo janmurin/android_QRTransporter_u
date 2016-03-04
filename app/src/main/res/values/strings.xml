@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">QRTransporter</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_odoslat">OdoslatActivity</string>
+    <string name="odoslatText">Odoslať</string>
+    <string name="stopText">Stop</string>
+</resources>

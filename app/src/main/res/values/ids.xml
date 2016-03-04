@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item type="id" name="qrcode_decode_succeeded"/>
+    <item name="qranalyzer_stats" type="id" />
+    <item name="qr_img_file" type="id" />
+    <item name="animate_new_qr" type="id" />
+    <item name="qr_img_generating_stopped" type="id" />
+</resources>

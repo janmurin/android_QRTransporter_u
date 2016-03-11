@@ -138,7 +138,7 @@ public class OdoslatActivity extends AppCompatActivity {
 
         // init VELKOST spinner
         velkostSpinner = (Spinner) findViewById(R.id.velkostSpinner);
-        String[] velkosti = {"100 B", "300 B", "500 B", "600 B", "700 B", "800 B", "900 B", "1000 B", "1200 B", "1400 B", "1600 B", "1800 B"};
+        String[] velkosti = {"100 B", "300 B", "500 B", "600 B", "700 B", "800 B", "900 B", "1050 B", "1200 B", "1400 B", "1600 B", "1800 B"};
         ArrayAdapter<String> adapter3 = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, velkosti);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         velkostSpinner.setAdapter(adapter3);

@@ -1,0 +1,4 @@
+include ':app'
+include ':openCVLibrary310'
+include ':zBarScannerLibrary'
+include ':zBarScannerDemo'

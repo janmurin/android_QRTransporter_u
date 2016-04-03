@@ -9,8 +9,11 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
+import sk.jmurin.android.qrtransporter.decoding.ReadQRActivity;
 import sk.jmurin.android.qrtransporter.sending.OdoslatActivity;
+import sk.jmurin.android.qrtransporter.sending.OdoslatActivity2;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -47,5 +50,26 @@ public class MainActivity extends AppCompatActivity {
         //Toast.makeText(this, "odoslatButtonClicked", Toast.LENGTH_SHORT).show();
         Intent odoslat = new Intent(this, OdoslatActivity.class);
         startActivity(odoslat);
+    }
+
+    public void prijatButtonClicked(View view){
+        System.out.println("prijatButtonClicked");
+        Intent odoslat = new Intent(this, ReadQRActivity.class);
+        odoslat.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+        startActivity(odoslat);
+    }
+    public void odoslatButtonClicked2(View view){
+        System.out.println("odoslatButtonClicked2");
+        //Toast.makeText(this, "odoslatButtonClicked", Toast.LENGTH_SHORT).show();
+        Intent odoslat = new Intent(this, OdoslatActivity2.class);
+        startActivity(odoslat);
+    }
+
+    public void prijatButtonClicked2(View view){
+        System.out.println("prijatButtonClicked2");
+        Toast.makeText(this,"not yet implemented",Toast.LENGTH_SHORT).show();
+//        Intent odoslat = new Intent(this, ReadQRActivity.class);
+//        odoslat.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+//        startActivity(odoslat);
     }
 }

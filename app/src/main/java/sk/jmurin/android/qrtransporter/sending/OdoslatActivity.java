@@ -66,6 +66,7 @@ public class OdoslatActivity extends AppCompatActivity {
     private long startTime;
     private int counter;
     private BitmapFactory.Options options;
+    private String loadedFilename;
 
     public OdoslatActivity() {
         imgGeneratorResultHandler = new Handler(imgGeneratorCallback);
@@ -181,6 +182,7 @@ public class OdoslatActivity extends AppCompatActivity {
 
     private void loadSubor(String itemAtPosition) {
         InputStream ins = getResources().openRawResource(getResources().getIdentifier(itemAtPosition.split("\\.")[0], "raw", getPackageName()));
+        loadedFilename=itemAtPosition;
         try {
             byte[] bytes = readBytes(ins);
             String base64data = Base64.encodeToString(bytes, Base64.DEFAULT);
@@ -256,7 +258,7 @@ public class OdoslatActivity extends AppCompatActivity {
         // spustime generatora obrazkov
         qrImgFiles = new CopyOnWriteArrayList<>();
         generating = true;
-        QRCodesImgGenerator codesImgGenerator = new QRCodesImgGenerator(casti, smallerDimension, imgGeneratorResultHandler, getApplicationContext());
+        QRCodesImgGenerator codesImgGenerator = new QRCodesImgGenerator(casti, smallerDimension, imgGeneratorResultHandler, getApplicationContext(),loadedFilename,FPS);
         imgGeneratorThread = new Thread(codesImgGenerator);
         imgGeneratorThread.start();
     }

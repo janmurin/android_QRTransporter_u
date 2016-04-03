@@ -28,13 +28,17 @@ public class QRCodesImgGenerator implements Runnable {
     private final Handler handler;
     private final int dimension;
     private final Context context;
+    private final String loadedFilename;
+    private final int FPS;
     private Bitmap resized;
 
-    public QRCodesImgGenerator(String[] casti, int smallerDimension, Handler imgGeneratorResultHandler, Context applicationContext) {
+    public QRCodesImgGenerator(String[] casti, int smallerDimension, Handler imgGeneratorResultHandler, Context applicationContext, String loadedFilename, int FPS) {
         this.casti = casti;
         this.handler = imgGeneratorResultHandler;
         this.dimension = smallerDimension;
         this.context = applicationContext;
+        this.loadedFilename = loadedFilename;
+        this.FPS = FPS;
     }
 
     @Override
@@ -45,7 +49,11 @@ public class QRCodesImgGenerator implements Runnable {
                     throw new InterruptedException();// ukoncime generovanie nasilne
                 }
                 System.out.println("i= " + i);
-                QRCodeEncoder qrCodeEncoder = new QRCodeEncoder((i + 1) + "/" + casti.length + "#" + casti[i],
+                String header = (i + 1) + "/" + casti.length + "#";
+                if (i == 0) {
+                    header = (i + 1) + "/" + casti.length + "/" + FPS + "/" + loadedFilename.replaceAll("/","").replaceAll("#","") + "#";
+                }
+                QRCodeEncoder qrCodeEncoder = new QRCodeEncoder(header + casti[i],
                         null,
                         Contents.Type.TEXT,
                         BarcodeFormat.QR_CODE.toString(),
@@ -91,15 +99,14 @@ public class QRCodesImgGenerator implements Runnable {
                 break;
             }
         }
-        System.out.println("velkostOkraja: "+velkostOkraja);
+        System.out.println("velkostOkraja: " + velkostOkraja);
         // zmensujeme iba obrazky ktore maju velku velkost okraja
         if (velkostOkraja > 10) {
-            resized = Bitmap.createBitmap(obrazok, velkostOkraja - 5, velkostOkraja - 5, obrazok.getWidth() -2* velkostOkraja+10, obrazok.getWidth() - 2*velkostOkraja+10);
+            resized = Bitmap.createBitmap(obrazok, velkostOkraja - 5, velkostOkraja - 5, obrazok.getWidth() - 2 * velkostOkraja + 10, obrazok.getWidth() - 2 * velkostOkraja + 10);
             return resized;
         }
         return obrazok;
     }
-
 
 
 }

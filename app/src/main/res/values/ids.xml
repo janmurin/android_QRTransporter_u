@@ -5,4 +5,5 @@
     <item name="qr_img_file" type="id" />
     <item name="animate_new_qr" type="id" />
     <item name="qr_img_generating_stopped" type="id" />
+    <item name="update_code_data_size" type="id">update_code_data_size</item>
 </resources>

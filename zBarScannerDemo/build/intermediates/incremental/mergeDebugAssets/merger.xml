@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merger version="3"><dataSet config="unspecified"><source path="/home/jmurin/Desktop/bakalarka/app/QRTransporter/zBarScannerDemo/build/intermediates/exploded-aar/QRTransporter/zBarScannerLibrary/unspecified/assets"/></dataSet><dataSet config="main"><source path="/home/jmurin/Desktop/bakalarka/app/QRTransporter/zBarScannerDemo/src/main/assets"/></dataSet><dataSet config="debug"><source path="/home/jmurin/Desktop/bakalarka/app/QRTransporter/zBarScannerDemo/src/debug/assets"/></dataSet></merger>

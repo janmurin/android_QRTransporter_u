@@ -72,6 +72,14 @@ public class QRCodesImgGenerator implements Runnable {
                 //System.out.println("uspesne skonvertovalo: " + vysledok);
                 out.flush();
                 out.close();
+
+//                File path2 =  Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+//                File file2 = new File(path2, "qr_gen" + i + ".png");
+//                FileOutputStream out2 = new FileOutputStream(file2);
+//                obrazok.compress(Bitmap.CompressFormat.PNG, 100, out2);
+//                //System.out.println("uspesne skonvertovalo: " + vysledok);
+//                out2.flush();
+//                out2.close();
                 //System.out.println("outputstream closed ");
                 Message message = Message.obtain(handler, R.id.qr_img_file, file);
                 message.sendToTarget();

@@ -12,6 +12,7 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import sk.jmurin.android.qrtransporter.decoding.ReadQRActivity;
+import sk.jmurin.android.qrtransporter.decoding.ReadQRActivity2;
 import sk.jmurin.android.qrtransporter.sending.OdoslatActivity;
 import sk.jmurin.android.qrtransporter.sending.OdoslatActivity2;
 
@@ -68,8 +69,8 @@ public class MainActivity extends AppCompatActivity {
     public void prijatButtonClicked2(View view){
         System.out.println("prijatButtonClicked2");
         Toast.makeText(this,"not yet implemented",Toast.LENGTH_SHORT).show();
-//        Intent odoslat = new Intent(this, ReadQRActivity.class);
-//        odoslat.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-//        startActivity(odoslat);
+        Intent odoslat = new Intent(this, ReadQRActivity2.class);
+        odoslat.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+        startActivity(odoslat);
     }
 }

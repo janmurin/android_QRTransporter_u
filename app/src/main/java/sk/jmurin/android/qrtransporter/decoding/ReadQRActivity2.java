@@ -48,13 +48,13 @@ import static org.opencv.imgproc.Imgproc.putText;
 import static sk.jmurin.android.qrtransporter.sending.Constants.*;
 
 
-public class ReadQRActivity extends Activity implements CvCameraViewListener2 {
+public class ReadQRActivity2 extends Activity implements CvCameraViewListener2 {
     static {
         System.loadLibrary("opencv_java3");
         System.loadLibrary("iconv");
     }
 
-    private static final String TAG = "ReadQRActivity";
+    private static final String TAG = "ReadQRActivity2";
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
     SimpleDateFormat sdfElapsed = new SimpleDateFormat("mm:ss");
 
@@ -87,7 +87,7 @@ public class ReadQRActivity extends Activity implements CvCameraViewListener2 {
     private long start;
     private ConcurrentSkipListSet<String> results;
     private int receivedFrames;
-    QRAnalyzer[] analyzers;
+    ColorQRAnalyzer[] analyzers;
     private Map<String, Integer> statistika;
     private int acceptedStatsCount;
     private boolean[] najdene;// viac ako 1000 framov nebude
@@ -98,7 +98,7 @@ public class ReadQRActivity extends Activity implements CvCameraViewListener2 {
     private String statusText;
     private int frameID;
 
-    public ReadQRActivity() {
+    public ReadQRActivity2() {
         Log.i(TAG, "Instantiated new " + this.getClass());
     }
 
@@ -140,10 +140,10 @@ public class ReadQRActivity extends Activity implements CvCameraViewListener2 {
         //statusTextView = (TextView) findViewById(R.id.statusTextView);
 
         // init analyzers
-        analyzers = new QRAnalyzer[Runtime.getRuntime().availableProcessors()];
+        analyzers = new ColorQRAnalyzer[Runtime.getRuntime().availableProcessors()];
         analyzerExecutor = Executors.newFixedThreadPool(analyzers.length);
         for (int i = 0; i < analyzers.length; i++) {
-            analyzers[i] = new QRAnalyzer(qrCodesToAnalyze, results, i, decodedResultHandler, getIntent());
+            analyzers[i] = new ColorQRAnalyzer(qrCodesToAnalyze, results, i, decodedResultHandler, getIntent());
         }
         startAnalyzers();
     }
@@ -253,7 +253,7 @@ public class ReadQRActivity extends Activity implements CvCameraViewListener2 {
             //barcode = new Image(mGray.cols(), mGray.rows(), "Y800");
             initialized = true;
             start = System.currentTimeMillis();
-            frameID=0;
+            frameID = 0;
         }
         frameID++;
         if (!readingCompleted) {
@@ -263,7 +263,7 @@ public class ReadQRActivity extends Activity implements CvCameraViewListener2 {
             // TODO: urychlit generovanie obrazkov
             startNano = System.nanoTime();
             Mat copy = new Mat();
-            mGray.copyTo(copy);
+            mRgba.copyTo(copy);
             AnalyzerTask newTask = new AnalyzerTask(false, true, copy, frameID);
             qrCodesToAnalyze.offer(newTask);
             Log.d(TAG, String.format("onCameraFrame: task created: %.2f ms", (float) (System.nanoTime() - startNano) / 1000000));
@@ -278,86 +278,81 @@ public class ReadQRActivity extends Activity implements CvCameraViewListener2 {
         return mRgba;
     }
 
-    public native String readQR(long matAddrRgba);
-
-    public native String hello();
-
-
     private int vsetkych;
     private final Handler.Callback decodedResultCallback = new Handler.Callback() {
 
         @Override
         public boolean handleMessage(Message message) {
-            if (message.what == R.id.qrcode_decode_succeeded) {
-                String zachytenyText = (String) message.obj;
-
-                if (zachytenyText != null) {
-                    vsetkych = Integer.parseInt(zachytenyText.split("#")[0].split("/")[1]);
-                    int frameID = Integer.parseInt(zachytenyText.split("#")[0].split("/")[0]);
-                    najdene[frameID] = true;
-                    Log.i(TAG, "handleMessage: Najdenych: " + results.size() + "/" + vsetkych + " Aktualny: " + frameID + "/" + vsetkych + " Chybajuce: ");
-//                    if (results.size() < vsetkych - 10) {
-//                        statusTextView.append(">10");
-//                    } else {
-//                        for (int i = 1; i <= vsetkych; i++) {
-//                            if (!najdene[i]) {
-//                                statusTextView.append(i + " ");
-//                            }
-//                        }
+            if (message.what == R.id.COLORqrcode_decode_succeeded) {
+//                String zachytenyText = (String) message.obj;
+//
+//                if (zachytenyText != null) {
+//                    vsetkych = Integer.parseInt(zachytenyText.split("#")[0].split("/")[1]);
+//                    int frameID = Integer.parseInt(zachytenyText.split("#")[0].split("/")[0]);
+//                    najdene[frameID] = true;
+//                    Log.i(TAG, "handleMessage: Najdenych: " + results.size() + "/" + vsetkych + " Aktualny: " + frameID + "/" + vsetkych + " Chybajuce: ");
+////                    if (results.size() < vsetkych - 10) {
+////                        statusTextView.append(">10");
+////                    } else {
+////                        for (int i = 1; i <= vsetkych; i++) {
+////                            if (!najdene[i]) {
+////                                statusTextView.append(i + " ");
+////                            }
+////                        }
+////                    }
+//                    if (vsetkych == results.size() && !readingCompleted) {
+//                        Log.i(TAG, "MAME VSETKO");
+//                        readingCompleted = true;
+//                        // mame vsetko zabijeme analyzerov, oni odoslu statistiku a potom sa spusti intent
+//                        killAnalyzers();
 //                    }
-                    if (vsetkych == results.size() && !readingCompleted) {
-                        Log.i(TAG, "MAME VSETKO");
-                        readingCompleted = true;
-                        // mame vsetko zabijeme analyzerov, oni odoslu statistiku a potom sa spusti intent
-                        killAnalyzers();
-                    }
-                }
+//                }
                 return true;
             }
 
-            if (message.what == R.id.qranalyzer_stats) {
-                // vezmeme statistiku z analyzera a updatneme celkovu statistiku
-                Map<String, Integer> stats = (Map<String, Integer>) message.obj;
-                Log.d(TAG, "analyzer stats");
-                for (Map.Entry entry : stats.entrySet()) {
-                    Log.d(TAG, entry.getKey() + ": " + entry.getValue());
-                    statistika.put((String) entry.getKey(), statistika.get(entry.getKey()) + (Integer) entry.getValue());
-                }
-                acceptedStatsCount++;
-                if (acceptedStatsCount == analyzers.length) {
-                    // all analyzers are finished, either is file transferred or transfer was cancelled by onBackPressed or onPause
-                    List<String> data = new ArrayList<>(results);
-                    Collections.sort(data, new DataComparator());
-                    double totalDataLength = 0;
-                    for (String dat : data) {
-                        Log.i(TAG, dat);
-                        totalDataLength += dat.length();
-                    }
-                    // vypiseme celkovu statistiku
-                    Log.i(TAG, "FINAL STATS");
-                    for (Map.Entry entry : statistika.entrySet()) {
-                        String kluc = (String) entry.getKey();
-                        int c = (int) entry.getValue();
-                        Log.i(TAG, kluc + " : " + c);
-                    }
-                    receivedFrames++;// so it is not 0
-                    long frameSpeed = ((System.currentTimeMillis() - start) / receivedFrames);
-                    double transferSpeed = totalDataLength / (System.currentTimeMillis() - start) * 1000;
-                    double successRate = statistika.get(Constants.RESULT_OK) / (double) (statistika.get(Constants.RESULT_OK) + statistika.get(RESULT_ERROR)) * 100;
-                    String elapsed = sdfElapsed.format(new Date(System.currentTimeMillis() - start));
-                    String statistics = "ziskanych framov: " + receivedFrames + "\n ms na frame: " + frameSpeed + "" +
-                            "\n transferSpeed: " + (int) transferSpeed + "\n successRate: " + (int) successRate + " elapsed: " + elapsed;
-                    Log.i(TAG, statistics);
-                    // ulozime ziskany subor
-                    if (!onPause) {
-                        // we start ReceivedFileActivity only when reading is not interrupted by onPause
-                        File novy = saveData(data);
-                        Intent test = new Intent(getApplicationContext(), ReceivedFileActivity.class);
-                        test.putExtra(ReceivedFileActivity.FILE_BUNDLE_KEY, novy);
-                        test.putExtra(ReceivedFileActivity.STATS, statistics);
-                        startActivity(test);
-                    }
-                }
+            if (message.what == R.id.COLORqranalyzer_stats) {
+//                // vezmeme statistiku z analyzera a updatneme celkovu statistiku
+//                Map<String, Integer> stats = (Map<String, Integer>) message.obj;
+//                Log.d(TAG, "analyzer stats");
+//                for (Map.Entry entry : stats.entrySet()) {
+//                    Log.d(TAG, entry.getKey() + ": " + entry.getValue());
+//                    statistika.put((String) entry.getKey(), statistika.get(entry.getKey()) + (Integer) entry.getValue());
+//                }
+//                acceptedStatsCount++;
+//                if (acceptedStatsCount == analyzers.length) {
+//                    // all analyzers are finished, either is file transferred or transfer was cancelled by onBackPressed or onPause
+//                    List<String> data = new ArrayList<>(results);
+//                    Collections.sort(data, new DataComparator());
+//                    double totalDataLength = 0;
+//                    for (String dat : data) {
+//                        Log.i(TAG, dat);
+//                        totalDataLength += dat.length();
+//                    }
+//                    // vypiseme celkovu statistiku
+//                    Log.i(TAG, "FINAL STATS");
+//                    for (Map.Entry entry : statistika.entrySet()) {
+//                        String kluc = (String) entry.getKey();
+//                        int c = (int) entry.getValue();
+//                        Log.i(TAG, kluc + " : " + c);
+//                    }
+//                    receivedFrames++;// so it is not 0
+//                    long frameSpeed = ((System.currentTimeMillis() - start) / receivedFrames);
+//                    double transferSpeed = totalDataLength / (System.currentTimeMillis() - start) * 1000;
+//                    double successRate = statistika.get(Constants.RESULT_OK) / (double) (statistika.get(Constants.RESULT_OK) + statistika.get(RESULT_ERROR)) * 100;
+//                    String elapsed = sdfElapsed.format(new Date(System.currentTimeMillis() - start));
+//                    String statistics = "ziskanych framov: " + receivedFrames + "\n ms na frame: " + frameSpeed + "" +
+//                            "\n transferSpeed: " + (int) transferSpeed + "\n successRate: " + (int) successRate + " elapsed: " + elapsed;
+//                    Log.i(TAG, statistics);
+//                    // ulozime ziskany subor
+//                    if (!onPause) {
+//                        // we start ReceivedFileActivity only when reading is not interrupted by onPause
+//                        File novy = saveData(data);
+//                        Intent test = new Intent(getApplicationContext(), ReceivedFileActivity.class);
+//                        test.putExtra(ReceivedFileActivity.FILE_BUNDLE_KEY, novy);
+//                        test.putExtra(ReceivedFileActivity.STATS, statistics);
+//                        startActivity(test);
+//                    }
+//                }
             }
             return false;
         }

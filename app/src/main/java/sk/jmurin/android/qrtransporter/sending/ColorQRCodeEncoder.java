@@ -31,6 +31,8 @@ public class ColorQRCodeEncoder {
     private int byteCapacity;
     private int[][] tmpl;
     private int dataElementsSize; // how much elements can be colored to store data
+    private int widthElements;
+    private int heightElements;
 
     public ColorQRCodeEncoder(int width, int height, int minDataSize) {
         this.WIDTH = width;
@@ -82,23 +84,26 @@ public class ColorQRCodeEncoder {
         Log.i(TAG, "dataElementsSize:" + dataElementsSize + " byteCapacity: " + byteCapacity);
 
         // elements matrix
-        tmpl = new int[(WIDTH - 2 * MARGIN_ELEMENTS * elementSize) / elementSize][(HEIGHT - 2 * MARGIN_ELEMENTS * elementSize) / elementSize];
+        widthElements = (WIDTH - 2 * MARGIN_ELEMENTS * elementSize) / elementSize;
+        heightElements = (HEIGHT - 2 * MARGIN_ELEMENTS * elementSize) / elementSize;
+        tmpl = new int[widthElements][heightElements];
+        Log.i(TAG, "tmpl size:" + tmpl.length + "x" + tmpl[0].length);
         // create markers
         createMarkers(tmpl);
         // set right bottom corner
-        tmpl[tmpl[0].length - 1][tmpl.length - 1] = Color.BLACK;
-        tmpl[tmpl[0].length - 2][tmpl.length - 1] = Color.BLACK;
-        tmpl[tmpl[0].length - 1][tmpl.length - 2] = Color.BLACK;
-        tmpl[tmpl[0].length - 2][tmpl.length - 2] = Color.BLACK;
+        tmpl[widthElements - 1][heightElements - 1] = Color.BLACK;
+        tmpl[widthElements - 2][heightElements - 1] = Color.BLACK;
+        tmpl[widthElements - 1][heightElements - 2] = Color.BLACK;
+        tmpl[widthElements - 2][heightElements - 2] = Color.BLACK;
         // set colors on first COLORS_SIZE free elements
         int counter = 1;
-        for (int y = 0; y < tmpl.length; y++) {
+        for (int y = 0; y < heightElements; y++) {
             boolean allIncluded = false;
-            for (int x = 0; x < tmpl[0].length; x++) {
+            for (int x = 0; x < widthElements; x++) {
                 if ((x < MARKER_SIZE && y < MARKER_SIZE) // skip left top
-                        || (x < MARKER_SIZE && y >= tmpl.length - MARKER_SIZE) // skip left bottom
-                        || (x >= tmpl[0].length - MARKER_SIZE && y < MARKER_SIZE) // skip right top
-                        || (x >= tmpl[0].length - CORNER_MARKER_SIZE && y >= tmpl.length - CORNER_MARKER_SIZE)) { // skip corner bottom
+                        || (x < MARKER_SIZE && y >= heightElements - MARKER_SIZE) // skip left bottom
+                        || (x >= widthElements - MARKER_SIZE && y < MARKER_SIZE) // skip right top
+                        || (x >= widthElements - CORNER_MARKER_SIZE && y >= heightElements - CORNER_MARKER_SIZE)) { // skip corner bottom
                     continue;
                 }
                 tmpl[x][y] = colors8[counter];
@@ -141,6 +146,8 @@ public class ColorQRCodeEncoder {
             }
             // append hash
             sb.append(hashBits);
+            Log.i(TAG, "data bits: " + sb);
+            Log.i(TAG, "hashcode: " + Arrays.hashCode(data));
 
             String bits = sb.toString();
             // parse bits into colors
@@ -174,13 +181,13 @@ public class ColorQRCodeEncoder {
             // set data elements
             int counter = 0;
             int colorsSkip = 0;
-            for (int y = 0; y < tmpl.length; y++) {
+            for (int y = 0; y < heightElements; y++) {
                 boolean allIncluded = false;
-                for (int x = 0; x < tmpl[0].length; x++) {
+                for (int x = 0; x < widthElements; x++) {
                     if ((x < MARKER_SIZE && y < MARKER_SIZE) // skip left top
-                            || (x < MARKER_SIZE && y >= tmpl.length - MARKER_SIZE) // skip left bottom
-                            || (x >= tmpl[0].length - MARKER_SIZE && y < MARKER_SIZE) // skip right top
-                            || (x >= tmpl[0].length - CORNER_MARKER_SIZE && y >= tmpl.length - CORNER_MARKER_SIZE)) { // skip corner bottom
+                            || (x < MARKER_SIZE && y >= heightElements - MARKER_SIZE) // skip left bottom
+                            || (x >= widthElements - MARKER_SIZE && y < MARKER_SIZE) // skip right top
+                            || (x >= widthElements - CORNER_MARKER_SIZE && y >= heightElements - CORNER_MARKER_SIZE)) { // skip corner bottom
                         continue;
                     }
                     // skipping first positions reserved for colors
@@ -192,7 +199,7 @@ public class ColorQRCodeEncoder {
                     if (counter < parsedColors.size()) {
                         tmpl[x][y] = colors8[parsedColors.get(counter)];
                     } else {
-                        tmpl[x][y] = Color.MAGENTA; // unused elements
+                        tmpl[x][y] = Color.GRAY; // unused elements
                     }
                     counter++;
                     if (counter == dataElementsSize) {
@@ -207,8 +214,8 @@ public class ColorQRCodeEncoder {
             }
 
             // draw code from matrix
-            for (int y = 0; y < tmpl.length; y++) {
-                for (int x = 0; x < tmpl[0].length; x++) {
+            for (int y = 0; y < heightElements; y++) {
+                for (int x = 0; x < widthElements; x++) {
                     nakresliStvorcek(
                             image,
                             MARGIN_ELEMENTS * elementSize + x * elementSize,
@@ -235,24 +242,24 @@ public class ColorQRCodeEncoder {
             dm[0][i + 1] = Color.BLACK;
             dm[6][i] = Color.BLACK;
             // right top
-            dm[dm[0].length - 7 + i][0] = Color.BLACK;
-            dm[dm[0].length - 6 + i][6] = Color.BLACK;
-            dm[dm[0].length - 7][i + 1] = Color.BLACK;
-            dm[dm[0].length - 1][i] = Color.BLACK;
+            dm[widthElements - 7 + i][0] = Color.BLACK;
+            dm[widthElements - 6 + i][6] = Color.BLACK;
+            dm[widthElements - 7][i + 1] = Color.BLACK;
+            dm[widthElements - 1][i] = Color.BLACK;
             // left bottom
-            dm[i][dm.length - 7] = Color.BLACK;
-            dm[i + 1][dm.length - 1] = Color.BLACK;
-            dm[0][i + dm.length - 6] = Color.BLACK;
-            dm[6][i + dm.length - 7] = Color.BLACK;
+            dm[i][heightElements - 7] = Color.BLACK;
+            dm[i + 1][heightElements - 1] = Color.BLACK;
+            dm[0][i + heightElements - 6] = Color.BLACK;
+            dm[6][i + heightElements - 7] = Color.BLACK;
         }
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
                 // left top
                 dm[2 + i][2 + j] = Color.BLACK;
                 // right top
-                dm[dm[0].length - 5 + i][2 + j] = Color.BLACK;
+                dm[widthElements - 5 + i][2 + j] = Color.BLACK;
                 // left bottom
-                dm[2 + i][dm.length - 5 + j] = Color.BLACK;
+                dm[2 + i][heightElements - 5 + j] = Color.BLACK;
             }
         }
     }

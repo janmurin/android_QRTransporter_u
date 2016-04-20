@@ -2,6 +2,7 @@ package sk.jmurin.android.qrtransporter.sending;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -36,9 +37,10 @@ public class ColorQRCodesImgGenerator implements Runnable {
         this.context = applicationContext;
         this.loadedFilename = loadedFilename;
         this.FPS = FPS;
+        CODE_DATA_SIZE=400;
         qrCodeEncoder = new ColorQRCodeEncoder(width, height, CODE_DATA_SIZE);
         BYTE_CAPACITY = qrCodeEncoder.getByteCapacity();
-        Log.i(TAG, "BYTE_CAPACITY: " + BYTE_CAPACITY);
+        Log.i(TAG, "BYTE_CAPACITY: " + BYTE_CAPACITY+" TOTAL FILE DATA SIZE: "+data.length);
     }
 
     @Override
@@ -46,7 +48,7 @@ public class ColorQRCodesImgGenerator implements Runnable {
         Message me = Message.obtain(handler, R.id.update_code_data_size, BYTE_CAPACITY);
         me.sendToTarget();
         try {
-            int paketsCount = (int) Math.ceil((data.length + loadedFilename.getBytes().length) / (BYTE_CAPACITY - HEADER_LENGTH));
+            int paketsCount = (int) Math.ceil((data.length + loadedFilename.getBytes().length+1) / ((double)BYTE_CAPACITY - HEADER_LENGTH)); // +1 for string delimeter
             Log.i(TAG, "paketsCount: " + paketsCount);
             if (paketsCount > 65535) {// 65535 is largest number that can be stored in 2 bytes
                 throw new RuntimeException("too much pakets for 2 byte representation: " + paketsCount + " > " + 65535);
@@ -82,7 +84,7 @@ public class ColorQRCodesImgGenerator implements Runnable {
                     paket[4] = (byte) (FPS);
                     byte[] filenameBytes = loadedFilename.getBytes();
                     System.arraycopy(filenameBytes, 0, paket, HEADER_LENGTH, filenameBytes.length);
-                    paket[5 + filenameBytes.length] = 0; // delimeter
+                    paket[5 + filenameBytes.length] = 0x00; // delimeter
                     byte[] chunk = Arrays.copyOfRange(data, offset, offset + paket.length - HEADER_LENGTH - filenameBytes.length - 1);//-1 for delimiter
                     System.arraycopy(chunk, 0, paket, HEADER_LENGTH + filenameBytes.length + 1, chunk.length);
                     offset += chunk.length;
@@ -108,6 +110,14 @@ public class ColorQRCodesImgGenerator implements Runnable {
                 //System.out.println("uspesne skonvertovalo: " + vysledok);
                 out.flush();
                 out.close();
+
+//                File path2 =  Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+//                File file2 = new File(path2, "klasifikator_" + paketID + ".png");
+//                FileOutputStream out2 = new FileOutputStream(file2);
+//                obrazok.compress(Bitmap.CompressFormat.PNG, 100, out2);
+//                //System.out.println("uspesne skonvertovalo: " + vysledok);
+//                out2.flush();
+//                out2.close();
                 //System.out.println("outputstream closed ");
                 Message message = Message.obtain(handler, R.id.qr_img_file, file);
                 message.sendToTarget();

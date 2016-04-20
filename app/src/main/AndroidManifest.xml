@@ -94,7 +94,18 @@
         <activity
             android:name=".decoding.ReceivedFileActivity"
             android:label="@string/title_activity_received_file"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".decoding.ReadQRActivity2"
+            android:configChanges="keyboardHidden|orientation"
+            android:label="@string/title_activity_pom"
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="landscape"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="sk.jmurin.android.qrtransporter.MainActivity" />
+        </activity>
     </application>
 
 </manifest>

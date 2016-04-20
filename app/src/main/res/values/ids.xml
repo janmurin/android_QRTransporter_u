@@ -6,4 +6,6 @@
     <item name="animate_new_qr" type="id" />
     <item name="qr_img_generating_stopped" type="id" />
     <item name="update_code_data_size" type="id">update_code_data_size</item>
+    <item name="COLORqrcode_decode_succeeded" type="id" />
+    <item name="COLORqranalyzer_stats" type="id" />
 </resources>

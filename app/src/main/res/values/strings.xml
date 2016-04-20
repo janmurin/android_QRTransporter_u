@@ -7,4 +7,5 @@
     <string name="stopText">Stop</string>
     <string name="title_activity_pom">read qr</string>
     <string name="title_activity_received_file">ReceivedFileActivity</string>
+    <string name="title_activity_read_qr2">ReadQRActivity2</string>
 </resources>

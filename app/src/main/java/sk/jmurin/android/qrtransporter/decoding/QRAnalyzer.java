@@ -1,6 +1,7 @@
 package sk.jmurin.android.qrtransporter.decoding;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
@@ -14,6 +15,8 @@ import net.sourceforge.zbar.SymbolSet;
 
 import org.opencv.core.Mat;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -25,6 +28,7 @@ import java.util.logging.Logger;
 
 import sk.jmurin.android.qrtransporter.R;
 
+import static org.opencv.imgcodecs.Imgcodecs.imwrite;
 import static sk.jmurin.android.qrtransporter.sending.Constants.*;
 
 /**
@@ -107,6 +111,9 @@ public class QRAnalyzer implements Runnable {
                 }
                 String result = readQR(task.mGray);
                 analyzujText(result);
+//                File path2 =  Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+//                File file2 = new File(path2, "received" + task.frameID + ".jpg");
+//                imwrite(file2.getAbsolutePath(), task.mGray);
                 task = qrCodesToAnalyze.take();
             }
 
@@ -289,4 +296,51 @@ public class QRAnalyzer implements Runnable {
 //        long endTime = System.nanoTime();
 //        System.out.println(String.format("Elapsed time image save3: %.2f ms", (float) (endTime - startTime) / 1000000));
 //    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

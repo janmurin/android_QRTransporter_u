@@ -8,14 +8,14 @@ import org.opencv.core.Mat;
 public class AnalyzerTask {
 
     final int frameID;
-    final Mat mGray;
+    final Mat img;
     final boolean isQR;
     final boolean isPoisonPill;
 
-    public AnalyzerTask(boolean isPoisonPill, boolean isQR, Mat mGray, int frameID) {
+    public AnalyzerTask(boolean isPoisonPill, boolean isQR, Mat img, int frameID) {
         this.isPoisonPill = isPoisonPill;
         this.isQR = isQR;
-        this.mGray = mGray;
+        this.img = img;
         this.frameID = frameID;
     }
 }

@@ -1,28 +1,19 @@
 package sk.jmurin.android.qrtransporter.decoding;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Base64;
 import android.util.Log;
 
-import net.sourceforge.zbar.Config;
 import net.sourceforge.zbar.Image;
 import net.sourceforge.zbar.ImageScanner;
-import net.sourceforge.zbar.Symbol;
-import net.sourceforge.zbar.SymbolSet;
 
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
@@ -42,6 +33,7 @@ public class ColorQRAnalyzer implements Runnable {
 
     private final String TAG;
     private final Handler resultHandler;
+    private final HintData hint;
     private ImageScanner mScanner;
     private Image barcode;
     private boolean initialized;
@@ -63,6 +55,18 @@ public class ColorQRAnalyzer implements Runnable {
     private int countOK;
     private int countERROR;
 
+    static {
+        System.loadLibrary("qr_reader");
+    }
+
+    static {
+        System.loadLibrary("colorQRreader"); // "myjni.dll" in Windows, "libmyjni.so" in Unixes
+    }
+
+    // A native method that returns a Java String to be displayed on the
+    // TextView
+    public native String getMessage(long nativeObjAddr);
+
     /**
      * thread that runs native code for analyzing QR code received in onCameraFrame in ReadQRActivity
      *
@@ -72,14 +76,24 @@ public class ColorQRAnalyzer implements Runnable {
      * @param decodedResultHandler
      * @param intent
      */
-    public ColorQRAnalyzer(BlockingQueue<AnalyzerTask> qrCodesToAnalyze, ConcurrentSkipListSet<String> results, int tag, Handler decodedResultHandler, Intent intent) {
+    public ColorQRAnalyzer(BlockingQueue<AnalyzerTask> qrCodesToAnalyze,
+                           ConcurrentSkipListSet<String> results,
+                           int tag,
+                           Handler decodedResultHandler,
+                           Intent intent,
+                           int[] klasifikator) {
         this.qrCodesToAnalyze = qrCodesToAnalyze;
         this.results = results;
         this.tag = tag;
         this.resultHandler = decodedResultHandler;
         TAG = "ColorQRAnalyzer" + tag;
+        hint = new HintData();
+        hint.klasifikator = klasifikator;
+        hint.rowsHint=36;
+        Log.i(TAG, "created ");
     }
 
+    public native String readQR(long matAddrRgba, HintData klasifikator);
 
     @Override
     public void run() {
@@ -92,7 +106,13 @@ public class ColorQRAnalyzer implements Runnable {
                     sendStats();
                     return;
                 }
-                //saveImage(task.mGray, task.frameID);
+                long startTime = System.nanoTime();
+
+                //Log.i(TAG, "dekodovanie vysledok: " + getMessage(task.img.getNativeObjAddr()));
+                Log.i(TAG, "dekodovanie vysledok: " + readQR(task.img.getNativeObjAddr(), hint));
+
+                long endTime = System.nanoTime();
+                Log.i(TAG, String.format("Elapsed time dekodovanie: %.2f ms", (float) (endTime - startTime) / 1000000));
 
                 task = qrCodesToAnalyze.take();
             }
@@ -107,6 +127,8 @@ public class ColorQRAnalyzer implements Runnable {
             Log.e(TAG, " interrupted by exception: " + ex.getMessage());
             sendStats();
             return;
+        } finally {
+            Log.i(TAG, "finally block  ");
         }
         // this code should never happen
         // Log.i(TAG, "successfully finished ");

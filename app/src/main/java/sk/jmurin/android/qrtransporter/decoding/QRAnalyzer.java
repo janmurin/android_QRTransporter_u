@@ -1,8 +1,6 @@
 package sk.jmurin.android.qrtransporter.decoding;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -15,8 +13,6 @@ import net.sourceforge.zbar.SymbolSet;
 
 import org.opencv.core.Mat;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -109,11 +105,11 @@ public class QRAnalyzer implements Runnable {
                     sendStats();
                     return;
                 }
-                String result = readQR(task.mGray);
+                String result = readQR(task.img);
                 analyzujText(result);
 //                File path2 =  Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
 //                File file2 = new File(path2, "received" + task.frameID + ".jpg");
-//                imwrite(file2.getAbsolutePath(), task.mGray);
+//                imwrite(file2.getAbsolutePath(), task.img);
                 task = qrCodesToAnalyze.take();
             }
 

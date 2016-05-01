@@ -9,6 +9,7 @@ import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.PrintWriter;
 import java.util.Arrays;
 
 import sk.jmurin.android.qrtransporter.R;
@@ -37,10 +38,10 @@ public class ColorQRCodesImgGenerator implements Runnable {
         this.context = applicationContext;
         this.loadedFilename = loadedFilename;
         this.FPS = FPS;
-        CODE_DATA_SIZE=400;
+        CODE_DATA_SIZE = 400;
         qrCodeEncoder = new ColorQRCodeEncoder(width, height, CODE_DATA_SIZE);
         BYTE_CAPACITY = qrCodeEncoder.getByteCapacity();
-        Log.i(TAG, "BYTE_CAPACITY: " + BYTE_CAPACITY+" TOTAL FILE DATA SIZE: "+data.length);
+        Log.i(TAG, "BYTE_CAPACITY: " + BYTE_CAPACITY + " TOTAL FILE DATA SIZE: " + data.length+" constructor code data size: "+CODE_DATA_SIZE);
     }
 
     @Override
@@ -48,7 +49,7 @@ public class ColorQRCodesImgGenerator implements Runnable {
         Message me = Message.obtain(handler, R.id.update_code_data_size, BYTE_CAPACITY);
         me.sendToTarget();
         try {
-            int paketsCount = (int) Math.ceil((data.length + loadedFilename.getBytes().length+1) / ((double)BYTE_CAPACITY - HEADER_LENGTH)); // +1 for string delimeter
+            int paketsCount = (int) Math.ceil((data.length + loadedFilename.getBytes().length + 1) / ((double) BYTE_CAPACITY - HEADER_LENGTH)); // +1 for string delimeter
             Log.i(TAG, "paketsCount: " + paketsCount);
             if (paketsCount > 65535) {// 65535 is largest number that can be stored in 2 bytes
                 throw new RuntimeException("too much pakets for 2 byte representation: " + paketsCount + " > " + 65535);
@@ -111,8 +112,8 @@ public class ColorQRCodesImgGenerator implements Runnable {
                 out.flush();
                 out.close();
 
-//                File path2 =  Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-//                File file2 = new File(path2, "klasifikator_" + paketID + ".png");
+//                File path2 = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+//                File file2 = new File(path2, loadedFilename.substring(0, loadedFilename.indexOf(".")) + "_" + paketID + ".png");
 //                FileOutputStream out2 = new FileOutputStream(file2);
 //                obrazok.compress(Bitmap.CompressFormat.PNG, 100, out2);
 //                //System.out.println("uspesne skonvertovalo: " + vysledok);
@@ -141,6 +142,47 @@ public class ColorQRCodesImgGenerator implements Runnable {
         message.sendToTarget();
         Log.i(TAG, "generator skonceny normalne");
 
+       // saveData(qrCodeEncoder.androidLog.toString(), "androidLog_" + loadedFilename.substring(0, loadedFilename.indexOf(".")) + ".txt");
+    }
+
+    private boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        return Environment.MEDIA_MOUNTED.equals(state);
+    }
+
+    private File saveData(String data, String fileName) {
+        Log.i(TAG, "saving data into file");
+        if (isExternalStorageWritable()) {
+            File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+
+            File file = null;
+            try {
+                // Make sure the Pictures directory exists.
+                boolean mkdirs = path.mkdirs();
+                if (mkdirs || path.isDirectory()) {
+                    file = new File(path, fileName);
+
+                    Log.i(TAG, "subor cesta: " + file);
+//                    OutputStream os = new FileOutputStream(file);
+//                    //System.out.println("full data: " + sb.toString());
+//                    //os.write(Base64.decode(sb.toString(), Base64.NO_WRAP));
+//                    os.write(data.);
+//                    os.close();
+                    PrintWriter pw = new PrintWriter(file);
+                    pw.print(data);
+                    pw.close();
+                    Log.i(TAG, "outputstream closed ");
+                }
+            } catch (Exception e) {
+                // Unable to create file, likely because external storage is
+                // not currently mounted.
+                Log.e("ExternalStorage", "Error writing " + file, e);
+            }
+            return file;
+        } else {
+            Log.e(TAG, "external storage not writable");
+            return null;
+        }
     }
 
 }

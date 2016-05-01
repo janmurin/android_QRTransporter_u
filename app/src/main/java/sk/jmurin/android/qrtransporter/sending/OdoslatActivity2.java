@@ -9,6 +9,8 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Base64;
+import android.util.Log;
 import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
@@ -20,14 +22,23 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.StringTokenizer;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -37,6 +48,7 @@ import sk.jmurin.android.qrtransporter.R;
 public class OdoslatActivity2 extends AppCompatActivity {
 
     private Timer timer;
+    private static final String TAG = "OdoslatActivity2";
     // gui
     private ImageView qrCodeImageView;
     private TextView statsTextView;
@@ -98,7 +110,7 @@ public class OdoslatActivity2 extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String itemAtPosition = (String) parent.getItemAtPosition(position);
                 System.out.println("vybrany subor: [" + itemAtPosition + "]");
-                loadSubor(itemAtPosition);
+                loadSubor(itemAtPosition, position);
             }
 
             @Override
@@ -157,7 +169,7 @@ public class OdoslatActivity2 extends AppCompatActivity {
         });
 
         // loadneme prvu polozku zo spinnera
-        loadSubor(subory[0]);
+        loadSubor(subory[0], 0);
     }
 
     private void updateRychlost() {
@@ -170,28 +182,42 @@ public class OdoslatActivity2 extends AppCompatActivity {
     private void refreshStatsTextView() {
         int cas = (sendingData.length / CODE_DATA_SIZE + 1) / FPS; // pocet sekund
         String statsText = "veľkosť súboru: " + (sendingData.length / 1024) + " KB \n" +
-                "rýchlosť: " + df.format(RYCHLOST) + " KB/s \n" +
+                "rýchlosť: " + df.format(RYCHLOST) + " KB/s (" + CODE_DATA_SIZE + ")\n" +
                 "potrebny čas: " + sdf.format(new Date(cas * 1000));
         potrebnyCas = sdf.format(new Date(cas * 1000));
         statsTextView.setText(statsText);
     }
 
-    private void loadSubor(String itemAtPosition) {
+    private void loadSubor(String itemAtPosition, int pos) {
         InputStream ins = getResources().openRawResource(getResources().getIdentifier(itemAtPosition.split("\\.")[0], "raw", getPackageName()));
         loadedFilename = itemAtPosition;
-        try {
-            sendingData = readBytes(ins);
-            System.out.println("nacitane sendingData size: " + sendingData.length + " sendingData: " + sendingData);
-            refreshStatsTextView();
-        } catch (IOException e) {
-            e.printStackTrace();
+        //try {
+        //sendingData = readBytes(ins);
+        if (pos == 0) {
+            sendingData = getBase64("test1_base64.txt");
         }
+        if (pos == 1) {
+            sendingData = getBase64("test2_base64.txt");
+        }
+        if (pos == 2) {
+            sendingData = getBase64("test3_base64.txt");
+        }
+        // ulozenie base64 verzie dat
+        //String base64data = Base64.encodeToString(sendingData, Base64.DEFAULT);
+        //System.out.println("base64 data: " + base64data);
+        //saveData(base64data,itemAtPosition);
+        System.out.println("nacitane sendingData size: " + sendingData.length + " sendingData: " + sendingData);
+        refreshStatsTextView();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
 
         // zastavime animovanie ak bezi, lebo sa vybral novy subor
         if (isAnimating) {
             stopAnimovanie();
         }
     }
+
 
     public void odoslatButtonClicked(View view) {
         System.out.println("odoslatButtonClicked");
@@ -244,6 +270,8 @@ public class OdoslatActivity2 extends AppCompatActivity {
         // spustime generatora obrazkov
         qrImgFiles = new CopyOnWriteArrayList<>();
         generating = true;
+        String val = (String) (velkostSpinner.getSelectedItem());
+        CODE_DATA_SIZE = Integer.parseInt(val.replace(" B", ""));
 
         ColorQRCodesImgGenerator codesImgGenerator = new ColorQRCodesImgGenerator(
                 sendingData,
@@ -273,7 +301,7 @@ public class OdoslatActivity2 extends AppCompatActivity {
                 if (timer == null) {
                     // este nebezi timer, takze animatorCallback nevie aktualizovat statusText a obrazok
                     String statsText = "veľkosť súboru: " + (sendingData.length / 1024) + " KB \n" +
-                            "frame: 0/" + qrImgFiles.size() + "\n" +
+                            "frame: 0/" + qrImgFiles.size() + "(" + CODE_DATA_SIZE + ")\n" +
                             "rýchlosť: " + df.format(RYCHLOST) + " KB/s  (" + potrebnyCas + ")";
                     if (isAnimating) {
                         statsTextView.setText(statsText);
@@ -365,7 +393,7 @@ public class OdoslatActivity2 extends AppCompatActivity {
                 Bundle args = message.getData();
                 String statsText = "veľkosť súboru: " + (sendingData.length / 1024) + " KB \n" +
                         "frame: " + args.getCharSequence(Constants.ODOSLAT_STATUS) + "\n" +
-                        "rýchlosť: " + df.format(RYCHLOST) + " KB/s\n" +
+                        "rýchlosť: " + df.format(RYCHLOST) + " KB/s (" + CODE_DATA_SIZE + ")\n" +
                         "ubehlo: " + sdf.format(new Date(System.currentTimeMillis() - startTime)) + " (" + potrebnyCas + ")";
                 statsTextView.setText(statsText);
 
@@ -423,6 +451,59 @@ public class OdoslatActivity2 extends AppCompatActivity {
 
         // and then we can return your byte array.
         return byteBuffer.toByteArray();
+    }
+
+    private byte[] getBase64(String filename) {
+        InputStream ins = getResources().openRawResource(getResources().getIdentifier(filename.split("\\.")[0], "raw", getPackageName()));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(ins));
+        StringBuilder out = new StringBuilder();
+        String line;
+        byte[] data = null;
+        try {
+            while ((line = reader.readLine()) != null) {
+                out.append(line + "\n");
+            }
+            data = Base64.decode(out.toString(), Base64.DEFAULT);
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return data;
+    }
+
+    private File saveData(String data, String fileName) {
+        Log.i(TAG, "saving data into file");
+        if (isExternalStorageWritable()) {
+            File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+
+            File file = null;
+            try {
+                // Make sure the Pictures directory exists.
+                boolean mkdirs = path.mkdirs();
+                if (mkdirs || path.isDirectory()) {
+                    file = new File(path, fileName);
+
+                    Log.i(TAG, "subor cesta: " + file);
+//                    OutputStream os = new FileOutputStream(file);
+//                    //System.out.println("full data: " + sb.toString());
+//                    //os.write(Base64.decode(sb.toString(), Base64.NO_WRAP));
+//                    os.write(data.);
+//                    os.close();
+                    PrintWriter pw = new PrintWriter(file);
+                    pw.print(data);
+                    pw.close();
+                    Log.i(TAG, "outputstream closed ");
+                }
+            } catch (Exception e) {
+                // Unable to create file, likely because external storage is
+                // not currently mounted.
+                Log.e("ExternalStorage", "Error writing " + file, e);
+            }
+            return file;
+        } else {
+            Log.e(TAG, "external storage not writable");
+            return null;
+        }
     }
 
 }

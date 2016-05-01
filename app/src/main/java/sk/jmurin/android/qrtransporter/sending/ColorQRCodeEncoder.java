@@ -33,11 +33,13 @@ public class ColorQRCodeEncoder {
     private int dataElementsSize; // how much elements can be colored to store data
     private int widthElements;
     private int heightElements;
+   // public StringBuilder androidLog = new StringBuilder();
 
     public ColorQRCodeEncoder(int width, int height, int minDataSize) {
         this.WIDTH = width;
         this.HEIGHT = height;
-        Log.i(TAG, "size of colorQR in px: " + WIDTH + "x" + HEIGHT);
+        Log.i(TAG, "size of colorQR in px: " + WIDTH + "x" + HEIGHT+" required CODE_DATA_SIZE: "+minDataSize);
+        //androidLog.append("size of colorQR in px: " + WIDTH + "x" + HEIGHT + "\n");
         createTemplate(minDataSize);
     }
 
@@ -74,6 +76,7 @@ public class ColorQRCodeEncoder {
         elementSize--;
         capacity = getCapacity(elementSize);
         Log.i(TAG, "elementsNeeded: " + elementsNeeded + " capacity: " + capacity + " elementSize: " + elementSize);
+        //androidLog.append("elementsNeeded: " + elementsNeeded + " capacity: " + capacity + " elementSize: " + elementSize + "\n");
         if (elementSize == 0) {
             throw new RuntimeException("unable to create colorQR: too much data. required " + elementsNeeded + " available: " + capacity);
         }
@@ -82,12 +85,14 @@ public class ColorQRCodeEncoder {
         // calculate capacity in bytes, how much bytes we can accept into qr code
         this.byteCapacity = capacity * BITS_FOR_ELEMENT / 8 - LENGTH_BYTES - HASH_BYTES;
         Log.i(TAG, "dataElementsSize:" + dataElementsSize + " byteCapacity: " + byteCapacity);
+        //androidLog.append("dataElementsSize:" + dataElementsSize + " byteCapacity: " + byteCapacity + "\n");
 
         // elements matrix
         widthElements = (WIDTH - 2 * MARGIN_ELEMENTS * elementSize) / elementSize;
         heightElements = (HEIGHT - 2 * MARGIN_ELEMENTS * elementSize) / elementSize;
         tmpl = new int[widthElements][heightElements];
         Log.i(TAG, "tmpl size:" + tmpl.length + "x" + tmpl[0].length);
+        //androidLog.append("tmpl size:" + tmpl.length + "x" + tmpl[0].length + "\n");
         // create markers
         createMarkers(tmpl);
         // set right bottom corner
@@ -133,10 +138,10 @@ public class ColorQRCodeEncoder {
 
     public Bitmap encodeAsBitmap(byte[] data) {
         try {
-            if (data.length != byteCapacity) {
-                // probably last chunk with less data than others
-                createTemplate(data.length);
-            }
+//            if (data.length != byteCapacity) {
+//                // probably last chunk with less data than others
+//                createTemplate(data.length);
+//            }
             // convert bytes to string of bits
             // initialize with length bits
             String hashBits = String.format("%32s", Integer.toBinaryString(Arrays.hashCode(data))).replace(' ', '0');
@@ -147,7 +152,9 @@ public class ColorQRCodeEncoder {
             // append hash
             sb.append(hashBits);
             Log.i(TAG, "data bits: " + sb);
+            //androidLog.append("data bits: " + sb + "\n");
             Log.i(TAG, "hashcode: " + Arrays.hashCode(data));
+           // androidLog.append("hashcode: " + Arrays.hashCode(data) + "\n");
 
             String bits = sb.toString();
             // parse bits into colors

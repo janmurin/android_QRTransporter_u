@@ -250,7 +250,7 @@ public class ReadQRActivity extends Activity implements CvCameraViewListener2 {
         mRgba = inputFrame.rgba();
         mGray = inputFrame.gray();
         if (!initialized) {
-            //barcode = new Image(mGray.cols(), mGray.rows(), "Y800");
+            //barcode = new Image(img.cols(), img.rows(), "Y800");
             initialized = true;
             start = System.currentTimeMillis();
             frameID=0;

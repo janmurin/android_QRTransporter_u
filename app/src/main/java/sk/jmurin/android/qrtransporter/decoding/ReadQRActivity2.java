@@ -23,6 +23,7 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -52,6 +53,7 @@ public class ReadQRActivity2 extends Activity implements CvCameraViewListener2 {
     static {
         System.loadLibrary("opencv_java3");
         System.loadLibrary("iconv");
+
     }
 
     private static final String TAG = "ReadQRActivity2";
@@ -142,8 +144,9 @@ public class ReadQRActivity2 extends Activity implements CvCameraViewListener2 {
         // init analyzers
         analyzers = new ColorQRAnalyzer[Runtime.getRuntime().availableProcessors()];
         analyzerExecutor = Executors.newFixedThreadPool(analyzers.length);
+        Klasifikator k = new Klasifikator();
         for (int i = 0; i < analyzers.length; i++) {
-            analyzers[i] = new ColorQRAnalyzer(qrCodesToAnalyze, results, i, decodedResultHandler, getIntent());
+            analyzers[i] = new ColorQRAnalyzer(qrCodesToAnalyze, results, i, decodedResultHandler, getIntent(), k.klasifikator);
         }
         startAnalyzers();
     }
@@ -250,7 +253,7 @@ public class ReadQRActivity2 extends Activity implements CvCameraViewListener2 {
         mRgba = inputFrame.rgba();
         mGray = inputFrame.gray();
         if (!initialized) {
-            //barcode = new Image(mGray.cols(), mGray.rows(), "Y800");
+            //barcode = new Image(img.cols(), img.rows(), "Y800");
             initialized = true;
             start = System.currentTimeMillis();
             frameID = 0;
@@ -263,7 +266,8 @@ public class ReadQRActivity2 extends Activity implements CvCameraViewListener2 {
             // TODO: urychlit generovanie obrazkov
             startNano = System.nanoTime();
             Mat copy = new Mat();
-            mRgba.copyTo(copy);
+            //mRgba.copyTo(copy);
+            Imgproc.cvtColor(mRgba, copy, Imgproc.COLOR_RGBA2BGR, 3);
             AnalyzerTask newTask = new AnalyzerTask(false, true, copy, frameID);
             qrCodesToAnalyze.offer(newTask);
             Log.d(TAG, String.format("onCameraFrame: task created: %.2f ms", (float) (System.nanoTime() - startNano) / 1000000));

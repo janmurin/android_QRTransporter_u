@@ -33,7 +33,7 @@ public class ColorQRAnalyzer implements Runnable {
 
     private final String TAG;
     private final Handler resultHandler;
-    private final HintData hint;
+    private final int[] klasifikator;
     private ImageScanner mScanner;
     private Image barcode;
     private boolean initialized;
@@ -87,9 +87,10 @@ public class ColorQRAnalyzer implements Runnable {
         this.tag = tag;
         this.resultHandler = decodedResultHandler;
         TAG = "ColorQRAnalyzer" + tag;
-        hint = new HintData();
-        hint.klasifikator = klasifikator;
-        hint.rowsHint=36;
+        this.klasifikator=klasifikator;
+//        hint.klasifikator = klasifikator;
+//        hint.rowsHint=36;
+//        hint.hintID=1;
         Log.i(TAG, "created ");
     }
 
@@ -98,6 +99,7 @@ public class ColorQRAnalyzer implements Runnable {
     @Override
     public void run() {
         Log.i(TAG, "executed ");
+        int count=1;
         try {
             task = qrCodesToAnalyze.take();
             while (task != null) {
@@ -109,12 +111,13 @@ public class ColorQRAnalyzer implements Runnable {
                 long startTime = System.nanoTime();
 
                 //Log.i(TAG, "dekodovanie vysledok: " + getMessage(task.img.getNativeObjAddr()));
-                Log.i(TAG, "dekodovanie vysledok: " + readQR(task.img.getNativeObjAddr(), hint));
+                Log.i(TAG, "dekodovanie vysledok: " + readQR(task.img.getNativeObjAddr(), new HintData(count,klasifikator,36)));
 
                 long endTime = System.nanoTime();
                 Log.i(TAG, String.format("Elapsed time dekodovanie: %.2f ms", (float) (endTime - startTime) / 1000000));
 
                 task = qrCodesToAnalyze.take();
+                count++;
             }
 
         } catch (InterruptedException ex) {

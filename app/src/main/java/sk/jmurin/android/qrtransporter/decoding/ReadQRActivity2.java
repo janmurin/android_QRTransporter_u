@@ -142,7 +142,8 @@ public class ReadQRActivity2 extends Activity implements CvCameraViewListener2 {
         //statusTextView = (TextView) findViewById(R.id.statusTextView);
 
         // init analyzers
-        analyzers = new ColorQRAnalyzer[Runtime.getRuntime().availableProcessors()];
+        int pocet=Runtime.getRuntime().availableProcessors();
+        analyzers = new ColorQRAnalyzer[1]; // TODO pocet
         analyzerExecutor = Executors.newFixedThreadPool(analyzers.length);
         Klasifikator k = new Klasifikator();
         for (int i = 0; i < analyzers.length; i++) {

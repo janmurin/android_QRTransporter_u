@@ -4925,6 +4925,28 @@ public class Klasifikator {
         klasifikator[13] = -16776961;
         klasifikator[12] = -16776961;
         klasifikator[11] = -16776961;
+        klasifikator[0] = -16777216;
+        klasifikator[0] = -16777216;
+        klasifikator[0] = -16777216;
+        klasifikator[3721] = -1;
+        klasifikator[2485] = -256;
+        klasifikator[1462] = -16777216;
+        klasifikator[9] = -16776961;
+        klasifikator[2798] = -1;
+        klasifikator[2484] = -256;
+        klasifikator[2397] = -65536;
+        klasifikator[2464] = -16776961;
+        klasifikator[4474] = -65536;
+        klasifikator[4764] = -65536;
+        klasifikator[2485] = -256;
+        klasifikator[2645] = -65281;
+        klasifikator[2549] = -16711681;
+        klasifikator[1859] = -16777216;
+        klasifikator[3644] = -256;
+        klasifikator[4763] = -65536;
+        klasifikator[4475] = -65536;
+        klasifikator[9] = -16776961;
+
     }
 
 

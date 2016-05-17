@@ -141,54 +141,44 @@ int hashCode(char a[], int size) {
     return result;
 }
 void readDataFromQR(int *data, Mat img, int ROWS, int COLUMNS, double elementSize) {
-    int MARKER_SIZE = 8;
-    int CORNER_MARKER_SIZE = 2;
-    int count = 0;
-    int MINUS = elementSize / 3;
-    for (int y = 0; y < ROWS; y++) {
-        for (int x = 0; x < COLUMNS; x++) {
-            if ((x < MARKER_SIZE && y < MARKER_SIZE) // skip left top
-                || (x < MARKER_SIZE && y >= ROWS - MARKER_SIZE) // skip left bottom
-                || (x >= COLUMNS - MARKER_SIZE && y < MARKER_SIZE) // skip right top
-                || (x >= COLUMNS - CORNER_MARKER_SIZE && y >= ROWS - CORNER_MARKER_SIZE)) { // skip corner bottom
-                continue;
-            }
-            if (count < 6) {
-                count++;
-                continue; // skipping 6 colors
-            }
-            int b = 0, g = 0, r = 0;
-            float area = 0;
-            // spriemernime farby vo stvorceku
-            for (int yy = y * elementSize + MINUS; yy < y * elementSize + elementSize - MINUS; yy++) {
-                Vec3b *row = img.ptr<Vec3b>(yy);
-                for (int xx = x * elementSize + MINUS; xx < x * elementSize + elementSize - MINUS; xx++) {
-                    b += (int) row[xx][0];
-                    g += (int) row[xx][1];
-                    r += (int) row[xx][2];
-                    area++;
+        int MARKER_SIZE = 8;
+        int CORNER_MARKER_SIZE = 2;
+        int count = 0;
+        for (int y = 0; y < ROWS; y++) {
+            for (int x = 0; x < COLUMNS; x++) {
+                if ((x < MARKER_SIZE && y < MARKER_SIZE) // skip left top
+                        || (x < MARKER_SIZE && y >= ROWS - MARKER_SIZE) // skip left bottom
+                        || (x >= COLUMNS - MARKER_SIZE && y < MARKER_SIZE) // skip right top
+                        || (x >= COLUMNS - CORNER_MARKER_SIZE && y >= ROWS - CORNER_MARKER_SIZE)) { // skip corner bottom
+                    continue;
                 }
+                if (count < 6) {
+                    count++;
+                    continue; // preskocit 6 zakladnych farieb
+                }
+                int yyy = round(y * elementSize + elementSize / 2);
+                Vec3b* row = img.ptr<Vec3b>(yyy);
+                int xx = round(x * elementSize + elementSize / 2);
+                int b = (int) row[xx][0];
+                int g = (int) row[xx][1];
+                int r = (int) row[xx][2];
+                //cout << count << ". " << b << " " << g << " " << r << ", " << xx << " " << yyy << endl;
+                // zaokruhlime farbu
+                r = (int) (round(r / 16.0)*16);
+                g = (int) (round(g / 16.0)*16);
+                b = (int) (round(b / 16.0)*16);
+                // zakodujeme do intu
+                int f = 0;
+                r = min(r, 255);
+                f |= r << 16;
+                g = min(g, 255);
+                f |= g << 8;
+                b = min(b, 255);
+                f |= b;
+                data[count - 6] = f; // ulozime farbu do pola, -6 lebo sme skipli 6 farieb
+                count++;
             }
-            b = b / area;
-            g = g / area;
-            r = r / area;
-            // zaokruhlime farbu
-            r = (int) (round(r / 16.0) * 16);
-            g = (int) (round(g / 16.0) * 16);
-            b = (int) (round(b / 16.0) * 16);
-            // zakodujeme do intu
-            int f = 0;
-            r = min(r, 255);
-            f |= r << 16;
-            g = min(g, 255);
-            f |= g << 8;
-            b = min(b, 255);
-            f |= b;
-
-            data[count - 6] = f; // ulozime farbu do pola, -6 lebo sme skipli 6 farieb
-            count++;
         }
-    }
 }
 // Function: Perpendicular Distance of a Point J from line formed by Points L and M; Equation of the line ax+by+c=0
 // Description: Given 3 points, the function derives the line quation of the first two points,
@@ -331,21 +321,17 @@ quad.
 push_back(M3);
 
 }
-
-bool isBlack(Mat gray, Mat img, int x, int y) {
-   // LOGD("isBlack: x=%d y=%d cols=%d rows=%d", x,y,gray.cols,gray.rows);
-    if(x>=gray.cols || x<0 || y>=gray.rows || y<0){
-        LOGD("isBlack: return false");
+bool isBlack(Mat gray, Mat img, float x, float y) {
+    // LOGD("isBlack: x=%d y=%d cols=%d rows=%d", x,y,gray.cols,gray.rows);
+    if (x >= gray.cols || x < 0 || y >= gray.rows || y < 0) {
+        //LOGD("isBlack: return false");
         return false;
     }
-    //cout << "isBlack " << x << " " << y;
-    uchar *row = gray.ptr<uchar>(y);
-    int bb = row[x];
-    // cout << " bb: " << bb << endl;
+    uchar* row = gray.ptr<uchar>((int) y);
+    int bb = row[(int) x];
     if (bb > 150) {
         return true;
     } else {
-        //img.at<Vec3b>(y, x) = Vec3b(0, 255, 255);
         return false;
     }
 }
@@ -597,13 +583,12 @@ JNICALL Java_sk_jmurin_android_qrtransporter_decoding_ColorQRAnalyzer_readQR
     int DBG = 1; // Debug Flag
 
     // 0. finding contours and mass centers
-    cvtColor(image, gray, CV_RGB2GRAY); // Convert Image captured from Image Input to GrayScale
+    cvtColor(image, gray, CV_BGR2GRAY); // Convert Image captured from Image Input to GrayScale
     Canny(gray, edges, 100, 200, 3); // Apply Canny edge detection on the gray image
     threshold(gray, thr, 0, 255, CV_THRESH_BINARY_INV | CV_THRESH_OTSU);
     Mat element = getStructuringElement(MORPH_CROSS, Size(3, 3));
     morphologyEx(edges, edges, MORPH_CLOSE, element);
-    findContours(edges, contours, hierarchy, RETR_TREE,
-                 CHAIN_APPROX_SIMPLE); // Find contours with hierarchy
+    findContours(edges, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE); // Find contours with hierarchy
     mark = 0; // Reset all detected marker count for this frame
 
     // Get Moments for all Contours and the mass centers
@@ -665,7 +650,7 @@ JNICALL Java_sk_jmurin_android_qrtransporter_decoding_ColorQRAnalyzer_readQR
         env->ReleaseIntArrayElements(*iArray, klasifikator, 0);
         string result = sstm.str();
         return env->NewStringUTF(result.c_str());
-    }else{ // Ensure we have (atleast 3; namely A,B,C) 'Alignment Markers' discovered
+    }else if (mark == 3){ // Ensure we have (atleast 3; namely A,B,C) 'Alignment Markers' discovered
         // We have found the 3 markers for the QR code; Now we need to determine which of them are 'top', 'right' and 'bottom' markers
 
         // Determining the 'top' marker
@@ -690,8 +675,7 @@ JNICALL Java_sk_jmurin_android_qrtransporter_decoding_ColorQRAnalyzer_readQR
 
         top = outlier; // The obvious choice
 
-        dist = cv_lineEquation(mc[median1], mc[median2],
-                               mc[outlier]); // Get the Perpendicular distance of the outlier from the longest side
+        dist = cv_lineEquation(mc[median1], mc[median2],mc[outlier]); // Get the Perpendicular distance of the outlier from the longest side
         slope = cv_lineSlope(mc[median1], mc[median2], align); // Also calculate the slope of the longest side
 
         // Now that we have the orientation of the line formed median1 & median2 and we also have the position of the outlier w.r.t. the line
@@ -717,10 +701,6 @@ JNICALL Java_sk_jmurin_android_qrtransporter_decoding_ColorQRAnalyzer_readQR
             right = median2;
             orientation = CV_QR_WEST;
         }
-
-
-        // To ensure any unintended values do not sneak up when QR code is not present
-        float area_top, area_right, area_bottom;
 
         if (top < contours.size() && right < contours.size() && bottom < contours.size()
             && contourArea(contours[top]) > 10 && contourArea(contours[right]) > 10 && contourArea(contours[bottom]) > 10) {
@@ -753,20 +733,20 @@ JNICALL Java_sk_jmurin_android_qrtransporter_decoding_ColorQRAnalyzer_readQR
                 env->ReleaseIntArrayElements(*iArray, klasifikator, 0);
                 return env->NewStringUTF(result.c_str());
             }
-            if(true) {
-                std::stringstream strim;
-                strim<<"/storage/sdcard1/Download/chybne/chybne_"<<hintID<<".png";
-                string res=strim.str();
-                LOGD("saving image: /storage/sdcard1/Download/chybne/chybne_%d.png", hintID);
-                imwrite(res,image);
+           // if(true) {
+//                std::stringstream strim;
+//                strim<<"/storage/sdcard1/Download/chybne/chybne_"<<hintID<<".png";
+//                string res=strim.str();
+//                LOGD("saving image: /storage/sdcard1/Download/chybne/chybne_%d.png", hintID);
+//                imwrite(res,image);
                 double intersectionCas = (double) getTickCount();
                 int iflag = getIntersectionPoint(M[1], M[2], O[3], O[2], N, image, thr);
                 intersectionCas = ((double) getTickCount() - intersectionCas) / getTickFrequency();
                 sstm << "find intersection time: " << intersectionCas << endl;
-                string result = sstm.str();
-                env->ReleaseIntArrayElements(*iArray, klasifikator, 0);
-                return env->NewStringUTF(result.c_str());
-            }
+//                string result = sstm.str();
+//                env->ReleaseIntArrayElements(*iArray, klasifikator, 0);
+//                return env->NewStringUTF(result.c_str());
+//            }
             float xOutDist = cv_distance(L[0], M[1]);
             qr_raw = Mat::zeros(xOutDist, xOutDist, CV_8UC3);
 
@@ -810,7 +790,7 @@ JNICALL Java_sk_jmurin_android_qrtransporter_decoding_ColorQRAnalyzer_readQR
                 ROWS = qr_raw.rows / elementSize;
             }
             sstm << "ROWS: " << ROWS << " COLUMNS: " << COLUMNS<< " qr_raw.cols: " << qr_raw.cols << " elementSize: " << elementSize << endl;
-            imwrite("/storage/sdcard1/Download/qr_raw.png",qr_raw);
+            //imwrite("/storage/sdcard1/Download/qr_raw.png",qr_raw);
             // nacitame datove elementy
             int dataElementsSize = ROWS * COLUMNS - 3 * 8 * 8 - 6 - 4;
             int data[dataElementsSize];
@@ -852,14 +832,14 @@ JNICALL Java_sk_jmurin_android_qrtransporter_decoding_ColorQRAnalyzer_readQR
 //               sstm << bits[i];
 //            }
 //            sstm<<endl;
-//            sstm << "debug vypis farieb" << endl;
-//            for (int i = 0; i < 20; i++) {
-//                char b[3];
-//                b[0] = bits[i * 3];
-//                b[1] = bits[i * 3 + 1];
-//                b[2] = bits[i * 3 + 2];
-//                sstm << getFarba(b) << ",";
-//            }
+            sstm << "debug vypis farieb" << endl;
+            for (int i = 0; i < 20; i++) {
+                char b[3];
+                b[0] = bits[i * 3];
+                b[1] = bits[i * 3 + 1];
+                b[2] = bits[i * 3 + 2];
+                sstm << getFarba(b) << ",";
+            }
 //            sstm << endl;
 //            char skuskaBity[25]="000001010011100101110111";
 //            sstm << "skuska vypis farieb" << endl;

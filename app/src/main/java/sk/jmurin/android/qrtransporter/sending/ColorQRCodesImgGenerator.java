@@ -38,7 +38,7 @@ public class ColorQRCodesImgGenerator implements Runnable {
         this.context = applicationContext;
         this.loadedFilename = loadedFilename;
         this.FPS = FPS;
-        CODE_DATA_SIZE = 400;
+        //CODE_DATA_SIZE = 400;
         qrCodeEncoder = new ColorQRCodeEncoder(width, height, CODE_DATA_SIZE);
         BYTE_CAPACITY = qrCodeEncoder.getByteCapacity();
         Log.i(TAG, "BYTE_CAPACITY: " + BYTE_CAPACITY + " TOTAL FILE DATA SIZE: " + data.length+" constructor code data size: "+CODE_DATA_SIZE);
@@ -112,13 +112,13 @@ public class ColorQRCodesImgGenerator implements Runnable {
                 out.flush();
                 out.close();
 
-//                File path2 = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-//                File file2 = new File(path2, loadedFilename.substring(0, loadedFilename.indexOf(".")) + "_" + paketID + ".png");
-//                FileOutputStream out2 = new FileOutputStream(file2);
-//                obrazok.compress(Bitmap.CompressFormat.PNG, 100, out2);
-//                //System.out.println("uspesne skonvertovalo: " + vysledok);
-//                out2.flush();
-//                out2.close();
+                File path2 = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                File file2 = new File(path2, loadedFilename.substring(0, loadedFilename.indexOf(".")) + "_" + paketID + ".png");
+                FileOutputStream out2 = new FileOutputStream(file2);
+                obrazok.compress(Bitmap.CompressFormat.PNG, 100, out2);
+                //System.out.println("uspesne skonvertovalo: " + vysledok);
+                out2.flush();
+                out2.close();
                 //System.out.println("outputstream closed ");
                 Message message = Message.obtain(handler, R.id.qr_img_file, file);
                 message.sendToTarget();

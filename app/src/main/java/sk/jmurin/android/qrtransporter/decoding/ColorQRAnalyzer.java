@@ -111,7 +111,7 @@ public class ColorQRAnalyzer implements Runnable {
                 long startTime = System.nanoTime();
 
                 //Log.i(TAG, "dekodovanie vysledok: " + getMessage(task.img.getNativeObjAddr()));
-                Log.i(TAG, "dekodovanie vysledok: " + readQR(task.img.getNativeObjAddr(), new HintData(count,klasifikator,36)));
+                Log.i(TAG, "dekodovanie vysledok: " + readQR(task.img.getNativeObjAddr(), new HintData(count,klasifikator,32)));
 
                 long endTime = System.nanoTime();
                 Log.i(TAG, String.format("Elapsed time dekodovanie: %.2f ms", (float) (endTime - startTime) / 1000000));

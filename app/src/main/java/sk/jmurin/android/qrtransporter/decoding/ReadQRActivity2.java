@@ -267,7 +267,7 @@ public class ReadQRActivity2 extends Activity implements CvCameraViewListener2 {
             // TODO: urychlit generovanie obrazkov
             startNano = System.nanoTime();
             Mat copy = new Mat();
-            //mRgba.copyTo(copy);
+//            mRgba.copyTo(copy);
             Imgproc.cvtColor(mRgba, copy, Imgproc.COLOR_RGBA2BGR, 3);
             AnalyzerTask newTask = new AnalyzerTask(false, true, copy, frameID);
             qrCodesToAnalyze.offer(newTask);
